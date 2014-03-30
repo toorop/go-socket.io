@@ -22,15 +22,19 @@ type Client struct {
 	*EventEmitter
 }
 
-func Dial(origin string) (*Client, error) {
+func Dial(origin, ressource string) (*Client, error) {
 	u, err := url.Parse(origin)
 	if err != nil {
 		return nil, err
 	}
 	endpoint := parseEndpoint(u)
 	u.Path = ""
-
-	url_ := fmt.Sprintf("%s/socket.io/%d/", u.String(), ProtocolVersion)
+	var url_ string
+	if len(ressource) == 0 {
+		url_ = fmt.Sprintf("%s/socket.io/%d/", u.String(), ProtocolVersion)
+	} else {
+		url_ = fmt.Sprintf("%s/%s/%d/", u.String(), ressource, ProtocolVersion)
+	}
 	r, err := http.Get(url_)
 	if err != nil {
 		return nil, err
@@ -40,6 +44,7 @@ func Dial(origin string) (*Client, error) {
 		return nil, errors.New("invalid status: " + r.Status)
 	}
 	body, err := ioutil.ReadAll(r.Body)
+	//fmt.Println(string(body))
 	if err != nil {
 		return nil, err
 	}
